@@ -1,4 +1,4 @@
-function createCard(cardName, imageLink, likeCard, openImage) {
+function createCard(cardName, imageLink, likeCard, openImage, removeCard) {
   const cardTemplate = document.querySelector("#card-template").content;
   const cardElement = cardTemplate.querySelector(".card").cloneNode(true);
 
@@ -13,7 +13,7 @@ function createCard(cardName, imageLink, likeCard, openImage) {
 
   cardDeleteBtn.addEventListener("click", () => removeCard(cardElement));
   cardLikeBtn.addEventListener("click", () => likeCard(cardLikeBtn));
-  cardImage.addEventListener("click", () => openImage(cardImage));
+  cardImage.addEventListener("click", () => openImage(cardName, imageLink));
 
   return cardElement;
 }
@@ -22,4 +22,8 @@ function removeCard(card) {
   card.remove();
 }
 
-export { createCard };
+function likeCard(cardLikeBtn) {
+  cardLikeBtn.classList.toggle("card__like-button_is-active");
+}
+
+export { createCard, likeCard, removeCard };
