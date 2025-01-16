@@ -37,9 +37,9 @@ const formElementEdit = document.forms["edit-profile"];
 const nameInput = formElementEdit["name"];
 const aboutInput = formElementEdit["description"];
 
-const formElementNewAdd = document.forms["new-place"];
-const placeNameInput = formElementNewAdd["place-name"];
-const imageLinkInput = formElementNewAdd["link"];
+const formElementNewCard = document.forms["new-place"];
+const placeNameInput = formElementNewCard["place-name"];
+const imageLinkInput = formElementNewCard["link"];
 
 const formElementDelete = document.forms["delete"];
 
@@ -47,6 +47,14 @@ const formElementEditAvatar = document.forms["edit-avatar"];
 const avatarInput = formElementEditAvatar["link"];
 
 const popups = document.querySelectorAll(".popup");
+
+const formElementNewCardBtn = formElementNewCard.querySelector(".button");
+const formElementEditBtn = formElementEdit.querySelector(".button");
+const formElementEditAvatarBtn = formElementEditAvatar.querySelector(".button");
+
+const errorCatcher = (err) => {
+  return console.log(err);
+};
 
 const validationConfig = {
   formSelector: ".popup__form",
@@ -95,14 +103,12 @@ Promise.all([getUserData(), getInitialCards()])
       cardContainer.append(cardElement);
     });
   })
-  .catch((err) => {
-    console.log(err);
-  });
+  .catch((err) => errorCatcher(err));
 
 // Обработчик событий: кнопка редактирования профиля
 profileEditBtn.addEventListener("click", (evt) => {
   clearValidation(profilePopup, validationConfig);
-  
+
   openModal(profilePopup);
 
   nameInput.value = profileName.textContent;
@@ -112,17 +118,16 @@ profileEditBtn.addEventListener("click", (evt) => {
 // Обработчик событий: кнопка добавления новой карточки
 addBtn.addEventListener("click", (evt) => {
   clearValidation(cardPopup, validationConfig);
-  
+
   openModal(cardPopup);
 
-  placeNameInput.value = "";
-  imageLinkInput.value = "";
+  formElementNewCard.reset();
 });
 
 // Обработчик событий: кнопка изменения аватара
 profileAvatarWrapper.addEventListener("click", (evt) => {
   clearValidation(editAvatarPopup, validationConfig);
-  
+
   openModal(editAvatarPopup);
 
   avatarInput.value = profileAvatar.src;
@@ -132,38 +137,40 @@ profileAvatarWrapper.addEventListener("click", (evt) => {
 function handleFormEditSubmit(evt) {
   evt.preventDefault();
 
-  renderLoading(true, formElementEdit.querySelector(".button"));
+  renderLoading(true, formElementEditBtn);
 
-  profileName.textContent = nameInput.value;
-  profileDescription.textContent = aboutInput.value;
+  editUserData({ name: nameInput.value, about: aboutInput.value })
+    .then(() => {
+      profileName.textContent = nameInput.value;
+      profileDescription.textContent = aboutInput.value;
 
-  editUserData({ name: nameInput.value, about: aboutInput.value }).finally(() =>
-    renderLoading(false, formElementEdit.querySelector(".button"))
-  );
-
-  closeModal(profilePopup);
+      closeModal(profilePopup);
+    })
+    .catch((err) => errorCatcher(err))
+    .finally(() => renderLoading(false, formElementEditBtn));
 }
 
 //Функция смены аватара пользователя
 function handleFormEditAvatarSubmit(evt) {
   evt.preventDefault();
 
-  renderLoading(true, formElementEditAvatar.querySelector(".button"));
+  renderLoading(true, formElementEditAvatarBtn);
 
-  changeAvatar(avatarInput.value).finally(() =>
-    renderLoading(false, formElementEditAvatar.querySelector(".button"))
-  );
+  changeAvatar(avatarInput.value)
+    .then(() => {
+      profileAvatar.src = avatarInput.value;
 
-  profileAvatar.src = avatarInput.value;
-
-  closeModal(editAvatarPopup);
+      closeModal(editAvatarPopup);
+    })
+    .catch((err) => errorCatcher(err))
+    .finally(() => renderLoading(false, formElementEditAvatarBtn));
 }
 
 // Функция добавления новой карточки
 function handleFormAddSubmit(evt) {
   evt.preventDefault();
 
-  renderLoading(true, formElementNewAdd.querySelector(".button"));
+  renderLoading(true, formElementNewCardBtn);
 
   addNewCard({ name: placeNameInput.value, link: imageLinkInput.value })
     .then((cardData) => {
@@ -181,20 +188,15 @@ function handleFormAddSubmit(evt) {
         removeCard
       );
       cardContainer.prepend(cardElement);
+
+      formElementNewCard.reset();
+
+      clearValidation(cardPopup, validationConfig);
+
+      closeModal(cardPopup);
     })
-    .catch((err) => {
-      console.log(err);
-    })
-    .finally(() =>
-      renderLoading(false, formElementNewAdd.querySelector(".button"))
-    );
-
-  placeNameInput.value = "";
-  imageLinkInput.value = "";
-
-  clearValidation(cardPopup, validationConfig);
-
-  closeModal(cardPopup);
+    .catch((err) => errorCatcher(err))
+    .finally(() => renderLoading(false, formElementNewCardBtn));
 }
 
 // Функция удаления карточки
@@ -204,13 +206,13 @@ function handleFormDeleteSubmit(evt) {
   const cardId = evt.target.dataset.id;
   const cardElement = document.querySelector(`.card[data-id="${cardId}"`);
 
-  deleteCardFromServer(cardId);
-  
-  cardElement.remove();
+  deleteCardFromServer(cardId)
+    .then(() => {
+      cardElement.remove();
 
-  evt.target.removeEventListener("click", handleFormDeleteSubmit);
-
-  closeModal(deleteCardPopup);
+      closeModal(deleteCardPopup);
+    })
+    .catch((err) => errorCatcher(err));
 }
 
 // Функция открытия попапа изображения
@@ -227,20 +229,23 @@ function removeCard(cardId) {
   openModal(deleteCardPopup);
 
   formElementDelete.dataset.id = cardId;
-  formElementDelete.addEventListener("submit", handleFormDeleteSubmit);
 }
 
 // Функция лайка карточки
 function likeCard(cardLikeBtn, cardId, cardLikeCount) {
   cardLikeBtn.classList.toggle("card__like_button_is-active");
   if (cardLikeBtn.classList.contains("card__like_button_is-active")) {
-    putLike(cardId).then((data) => {
-      cardLikeCount.textContent = data.likes.length;
-    });
+    putLike(cardId)
+      .then((data) => {
+        cardLikeCount.textContent = data.likes.length;
+      })
+      .catch((err) => errorCatcher(err));
   } else {
-    deleleLike(cardId).then((data) => {
-      cardLikeCount.textContent = data.likes.length;
-    });
+    deleleLike(cardId)
+      .then((data) => {
+        cardLikeCount.textContent = data.likes.length;
+      })
+      .catch((err) => errorCatcher(err));
   }
 }
 
@@ -254,7 +259,8 @@ function renderLoading(isLoading, button) {
 }
 
 formElementEdit.addEventListener("submit", handleFormEditSubmit);
-formElementNewAdd.addEventListener("submit", handleFormAddSubmit);
+formElementNewCard.addEventListener("submit", handleFormAddSubmit);
 formElementEditAvatar.addEventListener("submit", handleFormEditAvatarSubmit);
+formElementDelete.addEventListener("submit", handleFormDeleteSubmit);
 
 enableValidation(validationConfig);

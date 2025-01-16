@@ -9,34 +9,23 @@ const config = {
   },
 };
 
+const jsonConverter = (res) => {
+  if (res.ok) {
+    return res.json();
+  }
+  return Promise.reject(`Ошибка: ${res.status}`);
+};
+
 export const getInitialCards = () => {
   return fetch(config.baseUrl + "/cards", {
     headers: config.headers,
-  })
-    .then((res) => {
-      if (res.ok) {
-        return res.json();
-      }
-      return Promise.reject(`Ошибка: ${res.status}`);
-    })
-    .catch((err) => {
-      return console.log(err);
-    });
+  }).then((res) => jsonConverter(res));
 };
 
 export const getUserData = () => {
   return fetch(config.baseUrl + "/users/me", {
     headers: config.headers,
-  })
-    .then((res) => {
-      if (res.ok) {
-        return res.json();
-      }
-      return Promise.reject(`Ошибка: ${res.status}`);
-    })
-    .catch((err) => {
-      return console.log(err);
-    });
+  }).then((res) => jsonConverter(res));
 };
 
 export const editUserData = (userData) => {
@@ -47,16 +36,7 @@ export const editUserData = (userData) => {
       name: userData.name,
       about: userData.about,
     }),
-  })
-    .then((res) => {
-      if (res.ok) {
-        return res.json();
-      }
-      return Promise.reject(`Ошибка: ${res.status}`);
-    })
-    .catch((err) => {
-      return console.log(err);
-    });
+  }).then((res) => jsonConverter(res));
 };
 
 export const addNewCard = (newCard) => {
@@ -67,20 +47,11 @@ export const addNewCard = (newCard) => {
       link: newCard.link,
     }),
     headers: config.headers,
-  })
-    .then((res) => {
-      if (res.ok) {
-        return res.json();
-      }
-      return Promise.reject(`Ошибка: ${res.status}`);
-    })
-    .catch((err) => {
-      return console.log(err);
-    });
+  }).then((res) => jsonConverter(res));
 };
 
 export const deleteCardFromServer = (cardId) => {
-  fetch(config.baseUrl + `/cards/${cardId}`, {
+  return fetch(config.baseUrl + `/cards/${cardId}`, {
     method: "DELETE",
     headers: config.headers,
   });
@@ -90,32 +61,14 @@ export const putLike = (cardId) => {
   return fetch(config.baseUrl + `/cards/likes/${cardId}`, {
     method: "PUT",
     headers: config.headers,
-  })
-    .then((res) => {
-      if (res.ok) {
-        return res.json();
-      }
-      return Promise.reject(`Ошибка: ${res.status}`);
-    })
-    .catch((err) => {
-      return console.log(err);
-    });
+  }).then((res) => jsonConverter(res));
 };
 
 export const deleleLike = (cardId) => {
   return fetch(config.baseUrl + `/cards/likes/${cardId}`, {
     method: "DELETE",
     headers: config.headers,
-  })
-    .then((res) => {
-      if (res.ok) {
-        return res.json();
-      }
-      return Promise.reject(`Ошибка: ${res.status}`);
-    })
-    .catch((err) => {
-      return console.log(err);
-    });
+  }).then((res) => jsonConverter(res));
 };
 
 export const changeAvatar = (avatarUrl) => {
@@ -125,14 +78,5 @@ export const changeAvatar = (avatarUrl) => {
     body: JSON.stringify({
       avatar: avatarUrl,
     }),
-  })
-    .then((res) => {
-      if (res.ok) {
-        return res.json();
-      }
-      return Promise.reject(`Ошибка: ${res.status}`);
-    })
-    .catch((err) => {
-      return console.log(err);
-    });
+  }).then((res) => jsonConverter(res));
 };
